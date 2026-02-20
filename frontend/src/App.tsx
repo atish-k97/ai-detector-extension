@@ -10,15 +10,32 @@ function App() {
     safe: "bg-green-500",
   };
 
-  const handleScan = () => {
-    setIsScanning(true); // Shows the loading spinner
+  const handleScan = async () => {
+    // 1. Start UI animations
+    setIsScanning(true);
     setStatus("scanning");
 
-    setTimeout(() => {
-      setIsScanning(false); // Stops the spinner
+    try {
+      const response = await fetch("http://127.0.0.1:8000/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: "Checking for AI content" }), // We will make this text dynamic next
+      });
 
-      setStatus("detected");
-    }, 2500);
+      // 3. Waiting for Python to answer
+      const data = await response.json();
+
+      // 4. Update UI with the real result
+      setStatus(data.status);
+    } catch (error) {
+      // If Python isn't running or the connection fails
+      console.error("Backend unreachable:", error);
+      setStatus("idle");
+      alert("Make sure your FastAPI server is running!");
+    } finally {
+      // 5. Stop the spinner no matter what
+      setIsScanning(false);
+    }
   };
 
   return (
